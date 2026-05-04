@@ -11,6 +11,7 @@ Built to understand agile from the inside out — not just theory, but the data 
 - **Velocity calculation**: Track completed story points per sprint to forecast future capacity
 - **Burndown data**: Daily remaining work to visualize sprint progress
 - **Backlog prioritization**: Stories have priority ranks for grooming sessions
+- **Story dependencies**: Stories can be marked as blocked by other stories; the API refuses to mark a story DONE while any blocker is still open, and rejects dependency cycles
 
 ## Setup
 
@@ -39,9 +40,8 @@ python cli.py sprint-status 1
 
 ## Learning Exercise Notes
 
-This is v1. It's intentionally missing:
+This is v0.2. It's intentionally missing:
 - User authentication (all data is shared)
-- Story dependencies and blockers
 - Team member assignment
 - Epic/theme grouping
 - Retrospective tracking
@@ -55,8 +55,11 @@ These will be added incrementally (see `roadmap.md`) to practice iterative devel
 - `POST /stories` - Create a story
 - `GET /stories` - List all stories (filterable by status, sprint)
 - `GET /stories/{id}` - Get story details
-- `PATCH /stories/{id}` - Update story (status, points, priority)
+- `PATCH /stories/{id}` - Update story (status, points, priority); rejects DONE if blockers are unresolved (409)
 - `DELETE /stories/{id}` - Delete story
+- `GET /stories/{id}/blockers` - List stories that block this one and stories it blocks
+- `POST /stories/{id}/block/{blocker_id}` - Add a blocker (rejects self-block and cycles)
+- `DELETE /stories/{id}/block/{blocker_id}` - Remove a blocker
 
 ### Sprints
 - `POST /sprints` - Create a sprint
@@ -65,6 +68,15 @@ These will be added incrementally (see `roadmap.md`) to practice iterative devel
 - `GET /sprints/{id}/velocity` - Calculate completed story points
 - `GET /sprints/{id}/burndown` - Get daily burndown data
 - `POST /sprints/{id}/close` - Mark sprint complete
+
+## Tests
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+Each test runs against a fresh in-memory SQLite database, so they're order-independent.
 
 ## Next Steps
 

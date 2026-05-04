@@ -1,7 +1,13 @@
 # Roadmap for agile-tracker-api
 
-### Day 1: Add story dependencies and blockers
+### Day 1: Add story dependencies and blockers ✅ (shipped in v0.2.0)
 Implement many-to-many blocking relationships between stories. Add validation to prevent marking stories done if blockers remain. New endpoint: POST /stories/{id}/block/{blocker_id}
+
+Shipped:
+- `story_blockers` association table with cascade delete
+- `add_blocker` / `remove_blocker` CRUD with self-block + cycle detection
+- `update_story` returns 409 when status=DONE while blockers are unresolved
+- New endpoints: `GET /stories/{id}/blockers`, `POST /stories/{id}/block/{blocker_id}`, `DELETE /stories/{id}/block/{blocker_id}`
 
 ### Day 2: Add retrospective notes per sprint
 Create Retrospective model linked to sprints. Capture went_well, needs_improvement, and action_items. New endpoint: POST /sprints/{id}/retrospective to record retro data after sprint close

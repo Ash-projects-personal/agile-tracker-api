@@ -80,3 +80,18 @@ class BurndownData(BaseModel):
     sprint_id: int
     sprint_name: str
     burndown: list[BurndownPoint]
+
+class StorySummary(BaseModel):
+    """Lightweight Story view used in nested responses (e.g. blockers list)."""
+    id: int
+    title: str
+    status: StoryStatus
+    story_points: int
+
+    class Config:
+        from_attributes = True
+
+class BlockersResponse(BaseModel):
+    story_id: int
+    blockers: list[StorySummary]
+    blocking: list[StorySummary]

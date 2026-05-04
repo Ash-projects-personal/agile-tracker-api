@@ -1,5 +1,5 @@
 from datetime import date
-from sqlalchemy import create_engine, Column, Integer, String, Date, Enum, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, Date, Enum, ForeignKey, Table
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from src.models import StoryStatus, SprintStatus
@@ -10,9 +10,19 @@ engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
 
+# Self-referential many-to-many table for story blocking relationships.
+# A row (blocked_id=A, blocker_id=B) means "story A is blocked by story B" —
+# i.e. B must reach DONE before A can be marked DONE.
+story_blockers = Table(
+    "story_blockers",
+    Base.metadata,
+    Column("blocked_id", Integer, ForeignKey("stories.id", ondelete="CASCADE"), primary_key=True),
+    Column("blocker_id", Integer, ForeignKey("stories.id", ondelete="CASCADE"), primary_key=True),
+)
+
 class StoryDB(Base):
     __tablename__ = "stories"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(200), nullable=False)
     description = Column(String, nullable=True)
@@ -23,8 +33,17 @@ class StoryDB(Base):
     sprint_id = Column(Integer, ForeignKey("sprints.id"), nullable=True)
     created_at = Column(Date, default=date.today)
     completed_at = Column(Date, nullable=True)
-    
+
     sprint = relationship("SprintDB", back_populates="stories")
+
+    # Stories that must be DONE before this one can move to DONE.
+    blockers = relationship(
+        "StoryDB",
+        secondary=story_blockers,
+        primaryjoin=id == story_blockers.c.blocked_id,
+        secondaryjoin=id == story_blockers.c.blocker_id,
+        backref="blocking",
+    )
 
 class SprintDB(Base):
     __tablename__ = "sprints"
