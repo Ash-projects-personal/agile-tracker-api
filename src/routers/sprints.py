@@ -1,8 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from src.database import get_db
-from src.models import Sprint, SprintCreate, SprintWithStories, VelocityData, BurndownData
+from src.models import (
+    Sprint,
+    SprintCreate,
+    SprintWithStories,
+    VelocityData,
+    BurndownData,
+    Retrospective,
+    RetrospectiveCreate,
+)
 from src import crud
+from src.crud import RetrospectiveError
 from src.analytics import calculate_velocity, calculate_burndown
 
 router = APIRouter()
@@ -44,3 +53,42 @@ def close_sprint(sprint_id: int, db: Session = Depends(get_db)):
     if not sprint:
         raise HTTPException(status_code=404, detail="Sprint not found")
     return sprint
+
+
+@router.post(
+    "/{sprint_id}/retrospective",
+    response_model=Retrospective,
+    status_code=201,
+)
+def create_retrospective(
+    sprint_id: int,
+    retro: RetrospectiveCreate,
+    db: Session = Depends(get_db),
+):
+    """Record a retrospective for a closed sprint.
+
+    Returns 404 if the sprint is missing, 409 if the sprint isn't closed yet
+    or a retrospective already exists for it.
+    """
+    try:
+        result = crud.create_retrospective(db, sprint_id, retro)
+    except RetrospectiveError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    if result is None:
+        raise HTTPException(status_code=404, detail="Sprint not found")
+    return result
+
+
+@router.get("/{sprint_id}/retrospective", response_model=Retrospective)
+def get_retrospective(sprint_id: int, db: Session = Depends(get_db)):
+    """Fetch the recorded retrospective for a sprint, if any."""
+    sprint = crud.get_sprint(db, sprint_id)
+    if not sprint:
+        raise HTTPException(status_code=404, detail="Sprint not found")
+    retro = crud.get_retrospective_by_sprint(db, sprint_id)
+    if retro is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No retrospective recorded for sprint #{sprint_id}",
+        )
+    return retro

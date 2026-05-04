@@ -95,3 +95,28 @@ class BlockersResponse(BaseModel):
     story_id: int
     blockers: list[StorySummary]
     blocking: list[StorySummary]
+
+
+# --- Retrospectives (Day 2 / v0.3.0) ---
+
+class RetrospectiveCreate(BaseModel):
+    """Payload for recording a sprint retrospective.
+
+    `action_items` is a list of short follow-up actions agreed upon by the team.
+    Empty lists are allowed (some retros end with no concrete actions).
+    """
+    went_well: str = Field(..., min_length=1, max_length=4000)
+    needs_improvement: str = Field(..., min_length=1, max_length=4000)
+    action_items: list[str] = Field(default_factory=list)
+
+
+class Retrospective(BaseModel):
+    id: int
+    sprint_id: int
+    went_well: str
+    needs_improvement: str
+    action_items: list[str]
+    created_at: date
+
+    class Config:
+        from_attributes = True

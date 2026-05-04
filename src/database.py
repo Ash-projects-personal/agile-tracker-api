@@ -1,5 +1,5 @@
 from datetime import date
-from sqlalchemy import create_engine, Column, Integer, String, Date, Enum, ForeignKey, Table
+from sqlalchemy import create_engine, Column, Integer, String, Date, Enum, ForeignKey, Table, JSON
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from src.models import StoryStatus, SprintStatus
@@ -47,7 +47,7 @@ class StoryDB(Base):
 
 class SprintDB(Base):
     __tablename__ = "sprints"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
     start_date = Column(Date, nullable=False)
@@ -55,8 +55,34 @@ class SprintDB(Base):
     capacity = Column(Integer, nullable=False)
     status = Column(Enum(SprintStatus), default=SprintStatus.PLANNED)
     created_at = Column(Date, default=date.today)
-    
+
     stories = relationship("StoryDB", back_populates="sprint")
+    retrospective = relationship(
+        "RetrospectiveDB",
+        back_populates="sprint",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+
+class RetrospectiveDB(Base):
+    """One retrospective per sprint, recorded after the sprint closes."""
+    __tablename__ = "retrospectives"
+
+    id = Column(Integer, primary_key=True, index=True)
+    sprint_id = Column(
+        Integer,
+        ForeignKey("sprints.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+    went_well = Column(String, nullable=False)
+    needs_improvement = Column(String, nullable=False)
+    # JSON list of strings; SQLite stores as TEXT, SQLAlchemy handles serialization.
+    action_items = Column(JSON, nullable=False, default=list)
+    created_at = Column(Date, default=date.today)
+
+    sprint = relationship("SprintDB", back_populates="retrospective")
 
 def init_db():
     Base.metadata.create_all(bind=engine)

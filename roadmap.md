@@ -9,8 +9,14 @@ Shipped:
 - `update_story` returns 409 when status=DONE while blockers are unresolved
 - New endpoints: `GET /stories/{id}/blockers`, `POST /stories/{id}/block/{blocker_id}`, `DELETE /stories/{id}/block/{blocker_id}`
 
-### Day 2: Add retrospective notes per sprint
+### Day 2: Add retrospective notes per sprint ✅ (shipped in v0.3.0)
 Create Retrospective model linked to sprints. Capture went_well, needs_improvement, and action_items. New endpoint: POST /sprints/{id}/retrospective to record retro data after sprint close
+
+Shipped:
+- `RetrospectiveDB` table with one-to-one `sprint` ↔ `retrospective` link (unique sprint_id, cascade delete from sprint)
+- `action_items` stored as a JSON list of strings; `went_well` / `needs_improvement` are required non-empty text
+- `POST /sprints/{id}/retrospective` returns 201; rejects with 409 when sprint isn't `closed` or a retro already exists; 404 when sprint missing
+- Companion `GET /sprints/{id}/retrospective` for retrieval
 
 ### Day 3: Add team member assignments and capacity planning
 Create TeamMember model with per-sprint capacity. Add assigned_to field on stories. New endpoint: GET /sprints/{id}/capacity showing per-person workload vs. capacity

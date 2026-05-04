@@ -1,7 +1,14 @@
 from datetime import date
 from sqlalchemy.orm import Session
-from src.database import StoryDB, SprintDB
-from src.models import StoryCreate, StoryUpdate, StoryStatus, SprintCreate, SprintStatus
+from src.database import StoryDB, SprintDB, RetrospectiveDB
+from src.models import (
+    StoryCreate,
+    StoryUpdate,
+    StoryStatus,
+    SprintCreate,
+    SprintStatus,
+    RetrospectiveCreate,
+)
 
 def create_story(db: Session, story: StoryCreate) -> StoryDB:
     db_story = StoryDB(**story.model_dump())
@@ -147,3 +154,55 @@ def close_sprint(db: Session, sprint_id: int) -> SprintDB:
     db.commit()
     db.refresh(db_sprint)
     return db_sprint
+
+
+# --- Retrospectives (Day 2 / v0.3.0) ---
+
+class RetrospectiveError(ValueError):
+    """Raised when a retrospective operation is invalid (sprint not closed,
+    duplicate retro for the same sprint, etc.)."""
+
+
+def get_retrospective_by_sprint(db: Session, sprint_id: int) -> RetrospectiveDB:
+    return (
+        db.query(RetrospectiveDB)
+        .filter(RetrospectiveDB.sprint_id == sprint_id)
+        .first()
+    )
+
+
+def create_retrospective(
+    db: Session, sprint_id: int, retro: RetrospectiveCreate
+) -> RetrospectiveDB:
+    """Record a retrospective for a closed sprint.
+
+    Returns None if the sprint does not exist. Raises RetrospectiveError if
+    the sprint is not yet closed or a retrospective already exists for it.
+    """
+    db_sprint = get_sprint(db, sprint_id)
+    if not db_sprint:
+        return None
+
+    if db_sprint.status != SprintStatus.CLOSED:
+        raise RetrospectiveError(
+            f"Sprint #{sprint_id} must be closed before recording a retrospective "
+            f"(current status: {db_sprint.status.value})"
+        )
+
+    existing = get_retrospective_by_sprint(db, sprint_id)
+    if existing is not None:
+        raise RetrospectiveError(
+            f"Retrospective already exists for sprint #{sprint_id}"
+        )
+
+    db_retro = RetrospectiveDB(
+        sprint_id=sprint_id,
+        went_well=retro.went_well,
+        needs_improvement=retro.needs_improvement,
+        # Defensive copy so the input list isn't held by reference.
+        action_items=list(retro.action_items),
+    )
+    db.add(db_retro)
+    db.commit()
+    db.refresh(db_retro)
+    return db_retro
