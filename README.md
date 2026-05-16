@@ -1,5 +1,9 @@
 # Agile Tracker API
 
+[![CI](https://github.com/Ash-projects-personal/agile-tracker-api/actions/workflows/ci.yml/badge.svg)](https://github.com/Ash-projects-personal/agile-tracker-api/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
+
 A working implementation of core agile concepts: user stories, story points, sprints, velocity tracking, and burndown metrics.
 
 Built to understand agile from the inside out — not just theory, but the data structures and calculations that power sprint planning tools.
