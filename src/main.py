@@ -5,7 +5,7 @@ from src.routers import stories, sprints
 app = FastAPI(
     title="Agile Tracker API",
     description="Manage sprints, user stories, and track velocity",
-    version="0.3.0"
+    version="0.4.0"
 )
 
 app.include_router(stories.router, prefix="/stories", tags=["stories"])

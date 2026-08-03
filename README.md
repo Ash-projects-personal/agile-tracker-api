@@ -85,3 +85,16 @@ Each test runs against a fresh in-memory SQLite database, so they're order-indep
 ## Next Steps
 
 See `roadmap.md` for planned work.
+
+## v0.4.0 — analytics: rolling velocity + capacity utilisation, deeper blocker tests
+
+**New endpoints**
+
+- `GET /sprints/{id}/capacity` — committed points, capacity, utilisation ratio, and an `over_capacity` flag. Capacity-0 sprints with any committed story report `utilization: null` (undefined ratio) and `over_capacity: true`.
+- `GET /sprints/analytics/rolling-velocity?window=3` — mean completed velocity over the last N **closed** sprints (active sprints are excluded so an in-flight sprint can't inflate the number).
+
+**New tests (25)**
+
+- `tests/test_blocker_cycles.py` (9) — length-3/5/6 rings, diamond dependencies allowed, disjoint chains, direct-vs-transitive blocker semantics, removing the last link frees the transitive DONE.
+- `tests/test_sprint_capacity.py` (8) — zero-capacity sprints, exactly-at-capacity boundary, over-capacity flag, negative capacity rejected by validation, completing a story does not change committed points.
+- `tests/test_velocity_rolling_average.py` (8) — no-closed-sprints returns 0, single/three-sprint mean, window-most-recent selection, active sprints excluded, `window=0` rejected, default window of 3.

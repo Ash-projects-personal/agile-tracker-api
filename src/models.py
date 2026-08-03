@@ -120,3 +120,22 @@ class Retrospective(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# --- Analytics (v0.4.0) ---
+
+class CapacityUtilization(BaseModel):
+    sprint_id: int
+    sprint_name: str
+    capacity: int
+    committed_points: int
+    # For capacity=0 sprints with committed>0 this is null; the client should
+    # treat it as "over-committed by definition" rather than a real ratio.
+    utilization: float | None = None
+    over_capacity: bool
+
+
+class RollingVelocity(BaseModel):
+    window: int
+    sprints_considered: int
+    velocity: float

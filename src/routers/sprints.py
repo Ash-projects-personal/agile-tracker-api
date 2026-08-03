@@ -92,3 +92,27 @@ def get_retrospective(sprint_id: int, db: Session = Depends(get_db)):
             detail=f"No retrospective recorded for sprint #{sprint_id}",
         )
     return retro
+
+
+@router.get("/{sprint_id}/capacity", response_model=None)
+def get_capacity_utilization(sprint_id: int, db: Session = Depends(get_db)):
+    from src.analytics import calculate_capacity_utilization
+    sprint = crud.get_sprint(db, sprint_id)
+    if not sprint:
+        raise HTTPException(status_code=404, detail="Sprint not found")
+    return calculate_capacity_utilization(sprint)
+
+
+@router.get("/analytics/rolling-velocity")
+def rolling_velocity(window: int = 3, db: Session = Depends(get_db)):
+    from src.analytics import calculate_rolling_velocity
+    from src.models import SprintStatus
+    if window < 1:
+        raise HTTPException(status_code=400, detail="window must be >= 1")
+    sprints = crud.get_sprints(db)
+    closed = [s for s in sprints if s.status == SprintStatus.CLOSED]
+    return {
+        "window": window,
+        "sprints_considered": min(len(closed), window),
+        "velocity": calculate_rolling_velocity(sprints, window=window),
+    }
