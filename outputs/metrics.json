@@ -1,0 +1,22 @@
+{
+  "repo": "agile-tracker-api",
+  "verification": "Cloned the live repo, installed its pinned requirements, and ran its own test suite unchanged. The code in this tree is the original code; the only edit is the README staleness fix the audit identified.",
+  "tests_total_passed": 61,
+  "tests_failed": 0,
+  "test_functions_per_file": {
+    "tests/test_blocker_cycles.py": 9,
+    "tests/test_sprint_capacity.py": 8,
+    "tests/test_velocity_rolling_average.py": 8,
+    "tests/test_retrospective.py": 9,
+    "tests/test_blockers.py": 9,
+    "tests/test_day13_analytics.py": 13,
+    "tests/test_existing_endpoints.py": 5
+  },
+  "v040_files_sum": 25,
+  "readme_claim_check": "The v0.4.0 section claimed 25 new tests split 9, 8, 8 across blocker cycles, sprint capacity, and rolling velocity. Counted in the files: exactly that. The suite also covers retrospectives and blockers, 61 passing in total.",
+  "fixes_applied": [
+    "Learning Exercise Notes no longer list retrospective tracking as missing; the retrospective endpoints are implemented and tested (tests/test_retrospective.py).",
+    "Endpoint list now includes the retrospective endpoints and the story assign route, which the code had and the list omitted.",
+    "Version line updated from v0.2 to v0.4.0."
+  ]
+}

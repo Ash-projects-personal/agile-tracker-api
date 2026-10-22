@@ -6,7 +6,7 @@
 
 A working implementation of core agile concepts: user stories, story points, sprints, velocity tracking, and burndown metrics.
 
-Built to understand agile from the inside out — not just theory, but the data structures and calculations that power sprint planning tools.
+Built to understand agile from the inside out: not just theory, but the data structures and calculations that power sprint planning tools.
 
 ## What This Demonstrates
 
@@ -44,11 +44,10 @@ python cli.py sprint-status 1
 
 ## Learning Exercise Notes
 
-This is v0.2. It's intentionally missing:
+This is v0.4.0. It's intentionally missing:
 - User authentication (all data is shared)
 - Team member assignment
 - Epic/theme grouping
-- Retrospective tracking
 - Historical velocity charts
 
 These will be added incrementally (see `roadmap.md`) to practice iterative development.
@@ -61,6 +60,7 @@ These will be added incrementally (see `roadmap.md`) to practice iterative devel
 - `GET /stories/{id}` - Get story details
 - `PATCH /stories/{id}` - Update story (status, points, priority); rejects DONE if blockers are unresolved (409)
 - `DELETE /stories/{id}` - Delete story
+- `POST /stories/{id}/assign/{sprint_id}` - Assign a story to a sprint
 - `GET /stories/{id}/blockers` - List stories that block this one and stories it blocks
 - `POST /stories/{id}/block/{blocker_id}` - Add a blocker (rejects self-block and cycles)
 - `DELETE /stories/{id}/block/{blocker_id}` - Remove a blocker
@@ -72,6 +72,8 @@ These will be added incrementally (see `roadmap.md`) to practice iterative devel
 - `GET /sprints/{id}/velocity` - Calculate completed story points
 - `GET /sprints/{id}/burndown` - Get daily burndown data
 - `POST /sprints/{id}/close` - Mark sprint complete
+- `POST /sprints/{id}/retrospective` - Record a retrospective for a closed sprint (409 if the sprint isn't closed or a retrospective already exists)
+- `GET /sprints/{id}/retrospective` - Get the recorded retrospective for a sprint
 
 ## Tests
 
@@ -86,15 +88,15 @@ Each test runs against a fresh in-memory SQLite database, so they're order-indep
 
 See `roadmap.md` for planned work.
 
-## v0.4.0 — analytics: rolling velocity + capacity utilisation, deeper blocker tests
+## v0.4.0: analytics: rolling velocity + capacity utilisation, deeper blocker tests
 
 **New endpoints**
 
-- `GET /sprints/{id}/capacity` — committed points, capacity, utilisation ratio, and an `over_capacity` flag. Capacity-0 sprints with any committed story report `utilization: null` (undefined ratio) and `over_capacity: true`.
-- `GET /sprints/analytics/rolling-velocity?window=3` — mean completed velocity over the last N **closed** sprints (active sprints are excluded so an in-flight sprint can't inflate the number).
+- `GET /sprints/{id}/capacity`: committed points, capacity, utilisation ratio, and an `over_capacity` flag. Capacity-0 sprints with any committed story report `utilization: null` (undefined ratio) and `over_capacity: true`.
+- `GET /sprints/analytics/rolling-velocity?window=3`: mean completed velocity over the last N **closed** sprints (active sprints are excluded so an in-flight sprint can't inflate the number).
 
 **New tests (25)**
 
-- `tests/test_blocker_cycles.py` (9) — length-3/5/6 rings, diamond dependencies allowed, disjoint chains, direct-vs-transitive blocker semantics, removing the last link frees the transitive DONE.
-- `tests/test_sprint_capacity.py` (8) — zero-capacity sprints, exactly-at-capacity boundary, over-capacity flag, negative capacity rejected by validation, completing a story does not change committed points.
-- `tests/test_velocity_rolling_average.py` (8) — no-closed-sprints returns 0, single/three-sprint mean, window-most-recent selection, active sprints excluded, `window=0` rejected, default window of 3.
+- `tests/test_blocker_cycles.py` (9): length-3/5/6 rings, diamond dependencies allowed, disjoint chains, direct-vs-transitive blocker semantics, removing the last link frees the transitive DONE.
+- `tests/test_sprint_capacity.py` (8): zero-capacity sprints, exactly-at-capacity boundary, over-capacity flag, negative capacity rejected by validation, completing a story does not change committed points.
+- `tests/test_velocity_rolling_average.py` (8): no-closed-sprints returns 0, single/three-sprint mean, window-most-recent selection, active sprints excluded, `window=0` rejected, default window of 3.
